@@ -1,0 +1,194 @@
+#include <iostream>
+#include <string>
+#include <vector>
+#include <cstdlib> // For random seat number generation
+#include <ctime> // For seeding the random number generator
+
+using namespace std;
+
+class Movie {
+public:
+    string movieName;
+    float price; // Price in INR
+    int availableSeats;
+    vector<string> bookedSeats; // To track booked seats in format RowSeat (e.g., A1, B2)
+
+    Movie(string name, float p, int seats) {
+        movieName = name;
+        price = p;
+        availableSeats = seats;
+    }
+
+    void displayMovie() {
+        cout << "Movie: " << movieName << " | Price: ₹" << price << " | Available Seats: " << availableSeats << endl;
+    }
+
+    // Function to assign seats in a specific row for multiple tickets
+    void assignSeatsInRow(int numTickets, vector<string>& assignedSeats, char row) {
+        int seat = 1; // Start with seat 1 in the selected row
+
+        for (int i = 0; i < numTickets; ++i) {
+            // Generate seat in the format RowX (e.g., A1, B2, ... M10)
+            string seatNumber = string(1, row) + to_string(seat);
+            assignedSeats.push_back(seatNumber);
+            bookedSeats.push_back(seatNumber);
+
+            // Update seat number
+            seat++;
+        }
+    }
+};
+
+class Booking {
+public:
+    string customerName;
+    int customerAge;
+    string bookingDate;
+    Movie movie;
+    int bookedSeats;
+    vector<string> seatNumbers; // To store assigned seat numbers
+
+    Booking(string name, int age, string date, Movie m, int seats, vector<string> seatNums) :
+        customerName(name), customerAge(age), bookingDate(date), movie(m), bookedSeats(seats), seatNumbers(seatNums) {}
+
+    void displayTicket() {
+        cout << "\n--- Ticket Details ---\n";
+        cout << "Customer Name: " << customerName << endl;
+        cout << "Age: " << customerAge << endl;
+        cout << "Booking Date: " << bookingDate << endl;
+        cout << "Movie: " << movie.movieName << endl;
+        cout << "Seats Booked: " << bookedSeats << endl;
+        cout << "Seat Numbers: ";
+        for (string seat : seatNumbers) {
+            cout << seat << " ";
+        }
+        cout << endl;
+        cout << "Total Price: ₹" << movie.price * bookedSeats << endl;
+    }
+};
+
+class MovieTicketBookingSystem {
+private:
+    vector<Movie> movies;
+
+public:
+    MovieTicketBookingSystem() {
+        // Adding sample movies to the system with prices in INR and available seats
+        movies.push_back(Movie("Hera Pheri", 200.00, 120));
+        movies.push_back(Movie("Bhagam Bhag", 250.00, 120));
+        movies.push_back(Movie("Dhol", 180.00, 120));
+        movies.push_back(Movie("3 Idiots", 220.00, 120));
+        movies.push_back(Movie("Fukrey", 300.00, 120));
+    }
+
+    void showMovies() {
+        cout << "\n--- Available Movies ---\n";
+        for (int i = 0; i < movies.size(); ++i) {
+            movies[i].displayMovie();
+        }
+    }
+
+    void bookTicket() {
+        showMovies();
+        int movieChoice, seatsToBook;
+        string name, date;
+        int age;
+        char row;
+
+        cout << "\nEnter the movie number you want to book (1 to " << movies.size() << "): ";
+        cin >> movieChoice;
+
+        if (movieChoice < 1 || movieChoice > movies.size()) {
+            cout << "Invalid movie choice!" << endl;
+            return;
+        }
+
+        Movie selectedMovie = movies[movieChoice - 1];
+
+        cout << "\nEnter number of tickets to book: ";
+        cin >> seatsToBook;
+
+        if (seatsToBook > selectedMovie.availableSeats) {
+            cout << "Sorry, not enough seats available!" << endl;
+            return;
+        }
+
+        vector<string> assignedSeats;
+
+        // Ask user for the row to book seats
+        cout << "Enter the row (A to M): ";
+        cin >> row;
+
+        // Ensure the row is valid
+        if (row < 'A' || row > 'M') {
+            cout << "Invalid row! Please choose a row between A and M." << endl;
+            return;
+        }
+
+        // Assign seats in the chosen row
+        selectedMovie.assignSeatsInRow(seatsToBook, assignedSeats, row);
+
+        // Collecting details for all tickets at once
+        cout << "\nEnter booking date (DD/MM/YYYY) for all tickets: ";
+        cin >> date;
+
+        // Collect customer details for each ticket
+        for (int i = 0; i < seatsToBook; ++i) {
+            cout << "\nEnter details for ticket " << i + 1 << ":\n";
+            cout << "Enter customer name: ";
+            cin.ignore(); // To ignore the newline character left in buffer
+            getline(cin, name);
+
+            cout << "Enter customer age: ";
+            cin >> age;
+
+            // Creating the booking for each ticket
+            Booking newBooking(name, age, date, selectedMovie, 1, {assignedSeats[i]}); // Each ticket is booked individually
+
+            // Displaying ticket details for this ticket
+            newBooking.displayTicket();
+        }
+
+        // Updating the available seats after booking
+        selectedMovie.availableSeats -= seatsToBook;
+
+        cout << "\n--- Booking Completed ---\n";
+    }
+
+    void exitSystem() {
+        cout << "Thank you for using the Movie Ticket Booking System!" << endl;
+    }
+};
+
+int main() {
+    // Seed the random number generator
+    srand(time(0));
+
+    MovieTicketBookingSystem system;
+    int choice;
+
+    do {
+        cout << "\n--- Movie Ticket Booking System ---\n";
+        cout << "1. Show Available Movies\n";
+        cout << "2. Book Tickets\n";
+        cout << "3. Exit\n";
+        cout << "Enter your choice: ";
+        cin >> choice;
+
+        switch (choice) {
+            case 1:
+                system.showMovies();
+                break;
+            case 2:
+                system.bookTicket();
+                break;
+            case 3:
+                system.exitSystem();
+                break;
+            default:
+                cout << "Invalid choice! Please try again.\n";
+        }
+    } while (choice != 3);
+
+    return 0;
+}
